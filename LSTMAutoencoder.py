@@ -51,9 +51,9 @@ def MinMaxScaler(data):
     #numerator = data - np.min(data, 0)
     #denominator = np.max(data, 0) - np.min(data, 0)
         
-    angle_limit = 15 #[degree]
-    numerator = data - (-angle_limit*np.pi/180)
-    denominator = (angle_limit*np.pi/180) - (-angle_limit*np.pi/180)
+    angle_limit = 15*np.pi/180 #[rad]
+    numerator = data + angle_limit # [rad]
+    denominator = 2*(angle_limit)
     
     	
     # noise term prevents the zero division
@@ -69,7 +69,7 @@ data_train = MinMaxScaler(data_train)
 data_test = MinMaxScaler(data_test)
 
 x_train, y_train = data_train[:, -3], data_train[:, -3]
-x_test, y_test = data_test[:, -3], data_test[:, -3]
+x_test, y_test   =  data_test[:, -3],  data_test[:, -3]
 
 if x_train.ndim == 1:
     x_train = np.expand_dims(x_train,1) # shape matching for input dim is 1
@@ -192,8 +192,8 @@ with tf.Session() as sess:
                     loss_sum += step_loss
             loss_plot.append(loss_sum / int(train_size/mini_batch_size))
             
-            if step_loss < 1e-5:
-                break
+            #if step_loss < 1e-5:
+            #    break
             
             if epoch%10 == 0:
                 print("[Epoch: {}] loss: {}".format(epoch, step_loss))
