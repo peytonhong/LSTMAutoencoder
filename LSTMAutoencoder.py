@@ -68,8 +68,8 @@ data_test = np.loadtxt('_sim_flag3_R_P_Y_Cpp_jagal_test.dat')
 data_train = MinMaxScaler(data_train)
 data_test = MinMaxScaler(data_test)
 
-x_train, y_train = data_train[:, -3], data_train[:, -3]
-x_test, y_test = data_test[:, -3], data_test[:, -3]
+x_train, y_train = data_train[:, 1], data_train[:, 1]
+x_test, y_test   =  data_test[:, 1],  data_test[:, 1]
 
 if x_train.ndim == 1:
     x_train = np.expand_dims(x_train,1) # shape matching for input dim is 1
@@ -113,7 +113,7 @@ trainX, trainY = np.array(trainX, dtype=np.float32), np.array(trainY, dtype=np.f
 testX, testY = np.array(testX, dtype=np.float32), np.array(testY, dtype=np.float32)
 validationX, validationY = np.array(validationX, dtype=np.float32), np.array(validationY, dtype=np.float32)
 
-mini_batch_size = 30 # full batch if (mini_batch_size == train_size)
+mini_batch_size = 100 # full batch if (mini_batch_size == train_size)
 batch_index_jump = int(train_size/mini_batch_size)
 
 X = tf.placeholder(tf.float32, [None, seq_length, input_size]) # for time_major = False
