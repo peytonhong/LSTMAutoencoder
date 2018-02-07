@@ -113,7 +113,7 @@ trainX, trainY = np.array(trainX, dtype=np.float32), np.array(trainY, dtype=np.f
 testX, testY = np.array(testX, dtype=np.float32), np.array(testY, dtype=np.float32)
 validationX, validationY = np.array(validationX, dtype=np.float32), np.array(validationY, dtype=np.float32)
 
-mini_batch_size = 30 # full batch if (mini_batch_size == train_size)
+mini_batch_size = 100 # full batch if (mini_batch_size == train_size)
 batch_index_jump = int(train_size/mini_batch_size)
 
 X = tf.placeholder(tf.float32, [None, seq_length, input_size]) # for time_major = False
