@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 tf.reset_default_graph()
 
-seq_length = 5
+seq_length = 20
 pred_seq_length = 5 # must be smaller than seq_length
 input_size = 1
 output_size = 1
