@@ -23,8 +23,9 @@ hidden_size = 500
 depth = 1
 decoderReverse = False # if True, decoder output sequence is reversed. e.g. x3, x2, x1
 zero_input = True # input type of predictor layer
-useSavedVariables = False # if False, training process is executed.
+useSavedVariables = True # if False, training process is executed.
 batch_mix = True
+Train = True
 
 assert (seq_length >= pred_seq_length), "'pred_seq_length' must be smaller or equal to 'seq_length'!"
 
@@ -51,9 +52,9 @@ def MinMaxScaler(data):
     #numerator = data - np.min(data, 0)
     #denominator = np.max(data, 0) - np.min(data, 0)
         
-    angle_limit = 15*np.pi/180 #[rad]
-    numerator = data + angle_limit # [rad]
-    denominator = 2*(angle_limit)
+    angle_limit = 15 #[degree]
+    numerator = data - (-angle_limit*np.pi/180)
+    denominator = (angle_limit*np.pi/180) - (-angle_limit*np.pi/180)
     
     	
     # noise term prevents the zero division
@@ -69,7 +70,7 @@ data_train = MinMaxScaler(data_train)
 data_test = MinMaxScaler(data_test)
 
 x_train, y_train = data_train[:, -3], data_train[:, -3]
-x_test, y_test   =  data_test[:, -3],  data_test[:, -3]
+x_test, y_test = data_test[:, -3], data_test[:, -3]
 
 if x_train.ndim == 1:
     x_train = np.expand_dims(x_train,1) # shape matching for input dim is 1
@@ -113,7 +114,7 @@ trainX, trainY = np.array(trainX, dtype=np.float32), np.array(trainY, dtype=np.f
 testX, testY = np.array(testX, dtype=np.float32), np.array(testY, dtype=np.float32)
 validationX, validationY = np.array(validationX, dtype=np.float32), np.array(validationY, dtype=np.float32)
 
-mini_batch_size = 100 # full batch if (mini_batch_size == train_size)
+mini_batch_size = train_size # full batch if (mini_batch_size == train_size)
 batch_index_jump = int(train_size/mini_batch_size)
 
 X = tf.placeholder(tf.float32, [None, seq_length, input_size]) # for time_major = False
@@ -153,6 +154,8 @@ with tf.variable_scope("predictor"):
             predictor_output = tf.contrib.layers.fully_connected(_predictor_output, output_size, activation_fn=None)
             predictor_output_list.append(predictor_output)
         predictor_outputs = tf.stack(predictor_output_list, axis=1)   
+
+
         
 # loss calculation
 if decoderReverse == True:
@@ -160,9 +163,13 @@ if decoderReverse == True:
 else:
     decoder_loss = tf.reduce_mean(tf.square(decoder_outputs - X))
 predictor_loss = tf.reduce_mean(tf.square(predictor_outputs - X_predictor))
-loss = decoder_loss + predictor_loss
-train = tf.train.AdamOptimizer().minimize(loss)
-saver = tf.train.Saver() # for saving all variables
+loss = predictor_loss#+decoder_loss 
+
+vars_to_minimize = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='predictor')
+
+train = tf.train.AdamOptimizer().minimize(loss,var_list = vars_to_minimize)
+#train = tf.train.AdamOptimizer().minimize(loss)
+saver = tf.train.Saver(tf.trainable_variables()) # for saving all variables
 
 # session open
 with tf.Session() as sess:
@@ -171,8 +178,9 @@ with tf.Session() as sess:
     loss_plot = []
     if useSavedVariables == True:
         # Restore variables from disk.
-        saver.restore(sess, "./variable_save/LSTMAutoencoder_vehicle_2.ckpt")
-    else:
+        saver.restore(sess, "./variable_save/LSTMAutoencoder_vehicle_1_nopre")
+        
+    if Train == True:
         # Training step
         for epoch in range(201):
             loss_sum = 0
@@ -192,14 +200,14 @@ with tf.Session() as sess:
                     loss_sum += step_loss
             loss_plot.append(loss_sum / int(train_size/mini_batch_size))
             
-            #if step_loss < 1e-5:
-            #    break
+            if step_loss < 1e-5:
+                break
             
             if epoch%10 == 0:
                 print("[Epoch: {}] loss: {}".format(epoch, step_loss))
         
         # Save the variables to disk.
-        save_path = saver.save(sess, "./variable_save/LSTMAutoencoder_vehicle_2.ckpt")
+        save_path = saver.save(sess, "./variable_save/LSTMAutoencoder_vehicle_1_nopre_onlypred")
     
     # Test step
     loss_train, dec_train, pred_train = sess.run([loss, decoder_outputs, predictor_outputs], feed_dict={X: trainX, X_predictor: trainY})
