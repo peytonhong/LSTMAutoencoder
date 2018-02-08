@@ -52,13 +52,10 @@ def MinMaxScaler(data):
     #denominator = np.max(data, 0) - np.min(data, 0)
         
     angle_limit = 15*np.pi/180 #[rad]
-    numerator = data + angle_limit # [rad]
-    denominator = 2*(angle_limit)
-    
     	
     # noise term prevents the zero division
-    return numerator / (denominator + 1e-7)*2 - 1
-    #return numerator / (denominator + 1e-7)
+    return data / angle_limit # range [-1,1]
+    #return numerator / (denominator + 1e-7) # range [0,1]
 
 # training inputs
 print('Preparing input data...')
@@ -113,7 +110,7 @@ trainX, trainY = np.array(trainX, dtype=np.float32), np.array(trainY, dtype=np.f
 testX, testY = np.array(testX, dtype=np.float32), np.array(testY, dtype=np.float32)
 validationX, validationY = np.array(validationX, dtype=np.float32), np.array(validationY, dtype=np.float32)
 
-mini_batch_size = 100 # full batch if (mini_batch_size == train_size)
+mini_batch_size = train_size # full batch if (mini_batch_size == train_size)
 batch_index_jump = int(train_size/mini_batch_size)
 
 X = tf.placeholder(tf.float32, [None, seq_length, input_size]) # for time_major = False
@@ -276,3 +273,5 @@ plt.title('Test data result at each time stamp (5-step prediction)')
 result = np.stack([validationY[:,-1,:], pred_validation[:,-1,:]], axis=1)
 result = np.squeeze(result, axis=2)
 np.savetxt('result.txt', result, fmt='%.8e',delimiter=',')
+#numerator = 15*np.pi/180
+#np.savetxt('result.txt', np.squeeze(pred_validation,axis=2)*numerator, fmt='%.8e',delimiter=',')
